@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { Intention } from '../../types/canvas';
 import { useCanvasStore } from '../../stores/canvasStore';
 import { useVoiceRecognition } from '../../hooks/useVoiceRecognition';
+import { useAI } from '../../hooks/useAI';
 import VoiceInput from '../ui/VoiceInput';
 import TaskCard from './TaskCard';
 
@@ -15,6 +16,33 @@ export default function IntentionCard({ intention, isActive }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
   const { updateIntention, setActiveIntention } = useCanvasStore();
+  const { processIntention, processingState, isAIAvailable, generateMoreTasks } = useAI();
+
+  // Memoize the onResult callback to prevent recreation on every render
+  const handleVoiceResult = useCallback((finalTranscript: string, isFinal: boolean) => {
+    if (isFinal && finalTranscript.trim()) {
+      // First update the intention with the voice input
+      updateIntention(intention.id, {
+        originalVoiceInput: finalTranscript,
+        title: finalTranscript,
+        status: 'processing',
+      });
+      
+      // Then trigger AI processing if available
+      if (isAIAvailable) {
+        processIntention(intention.id, finalTranscript);
+      } else {
+        // Fallback when AI is not available
+        updateIntention(intention.id, {
+          status: 'active',
+          description: `Voice input captured: "${finalTranscript}". AI processing unavailable - add tasks manually.`,
+          aiProgress: 0,
+        });
+      }
+      
+      setActiveIntention(null);
+    }
+  }, [intention.id, updateIntention, setActiveIntention, isAIAvailable, processIntention]);
 
   const {
     isListening,
@@ -24,16 +52,7 @@ export default function IntentionCard({ intention, isActive }: Props) {
     resetTranscript,
     isSupported,
   } = useVoiceRecognition({
-    onResult: (finalTranscript, isFinal) => {
-      if (isFinal && finalTranscript.trim()) {
-        updateIntention(intention.id, {
-          originalVoiceInput: finalTranscript,
-          title: finalTranscript,
-          status: 'processing',
-        });
-        setActiveIntention(null);
-      }
-    },
+    onResult: handleVoiceResult,
   });
 
   // Auto-start listening when intention is created and active
@@ -71,6 +90,11 @@ export default function IntentionCard({ intention, isActive }: Props) {
   };
 
   const getStatusText = () => {
+    // Show AI processing state if currently processing
+    if (processingState.isProcessing) {
+      return processingState.currentStep || 'AI Processing...';
+    }
+    
     switch (intention.status) {
       case 'listening': return isListening ? 'Listening...' : 'Ready to listen';
       case 'processing': return 'AI Processing...';
@@ -136,16 +160,23 @@ export default function IntentionCard({ intention, isActive }: Props) {
               <span className="text-sm text-gray-400 block">
                 {getStatusText()}
               </span>
-              {intention.status === 'processing' && (
-                <div className="w-24 h-1 bg-gray-700 rounded-full mt-1">
-                  <motion.div
-                    className="h-1 bg-yellow-400 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: '100%' }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
-                </div>
-              )}
+                          {(intention.status === 'processing' || processingState.isProcessing) && (
+              <div className="w-24 h-1 bg-gray-700 rounded-full mt-1">
+                <motion.div
+                  className="h-1 bg-yellow-400 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ 
+                    width: processingState.isProcessing 
+                      ? `${processingState.progress}%` 
+                      : '100%' 
+                  }}
+                  transition={{ 
+                    duration: processingState.isProcessing ? 0.5 : 3, 
+                    repeat: processingState.isProcessing ? 0 : Infinity 
+                  }}
+                />
+              </div>
+            )}
             </div>
           </div>
           
@@ -222,6 +253,29 @@ export default function IntentionCard({ intention, isActive }: Props) {
               </div>
             )}
 
+            {/* AI Error Display */}
+            {processingState.error && (
+              <div className="bg-red-900/50 border border-red-600 rounded-lg p-3 mb-3">
+                <p className="text-xs text-red-300 mb-2">AI Processing Error:</p>
+                <p className="text-xs text-red-200">{processingState.error}</p>
+                <button
+                  onClick={() => processIntention(intention.id, intention.originalVoiceInput)}
+                  className="text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded mt-2"
+                >
+                  🔄 Retry AI Processing
+                </button>
+              </div>
+            )}
+
+            {/* AI Availability Warning */}
+            {!isAIAvailable && intention.status === 'active' && (
+              <div className="bg-yellow-900/50 border border-yellow-600 rounded-lg p-2 mb-3">
+                <p className="text-xs text-yellow-300">
+                  ⚠️ AI features unavailable. Add OpenAI API key to enable automatic task generation.
+                </p>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex gap-2 mt-4">
               {intention.tasks.length > 0 && (
@@ -234,12 +288,24 @@ export default function IntentionCard({ intention, isActive }: Props) {
               )}
               
               {intention.status === 'active' && (
-                <button
-                  onClick={handleComplete}
-                  className="canvas-button-success"
-                >
-                  ✓ Mark Complete
-                </button>
+                <>
+                  <button
+                    onClick={handleComplete}
+                    className="canvas-button-success"
+                  >
+                    ✓ Mark Complete
+                  </button>
+                  
+                  {isAIAvailable && (
+                    <button
+                      onClick={() => generateMoreTasks(intention.id)}
+                      className="canvas-button-primary"
+                      title="Generate more AI tasks"
+                    >
+                      🤖+ More Tasks
+                    </button>
+                  )}
+                </>
               )}
               
               {intention.status === 'listening' && !isListening && isSupported && (

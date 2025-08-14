@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useCanvasStore } from '../../stores/canvasStore';
+import { useAI } from '../../hooks/useAI';
 
 export default function CanvasToolbar() {
   const { 
@@ -8,6 +9,8 @@ export default function CanvasToolbar() {
     updateCanvasState, 
     resetCanvas 
   } = useCanvasStore();
+  
+  const { isAIAvailable, processingState } = useAI();
 
   const handleZoomIn = () => {
     updateCanvasState({ zoom: Math.min(canvasState.zoom * 1.2, 3) });
@@ -50,6 +53,23 @@ export default function CanvasToolbar() {
         <div className="flex items-center gap-1">
           <span className="w-2 h-2 bg-orange-400 rounded-full"></span>
           <span>{totalTasks} Tasks</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className={`w-2 h-2 rounded-full ${
+            processingState.isProcessing 
+              ? 'bg-yellow-400 animate-pulse' 
+              : isAIAvailable 
+                ? 'bg-green-400' 
+                : 'bg-red-400'
+          }`}></span>
+          <span>
+            AI {processingState.isProcessing 
+              ? 'Processing...' 
+              : isAIAvailable 
+                ? 'Ready' 
+                : 'Offline'
+            }
+          </span>
         </div>
       </div>
 

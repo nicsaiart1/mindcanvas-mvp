@@ -20,6 +20,19 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}) {
     onError,
   } = options;
 
+  // Use refs to store the latest callback functions
+  const onResultRef = useRef(onResult);
+  const onErrorRef = useRef(onError);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
+
   const [state, setState] = useState<VoiceRecognitionState>({
     isListening: false,
     transcript: '',
@@ -71,8 +84,8 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}) {
             confidence,
           }));
           
-          if (onResult) {
-            onResult(transcript, isFinal);
+          if (onResultRef.current) {
+            onResultRef.current(transcript, isFinal);
           }
         }
       };
@@ -85,8 +98,8 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}) {
           isListening: false,
         }));
         
-        if (onError) {
-          onError(errorMessage);
+        if (onErrorRef.current) {
+          onErrorRef.current(errorMessage);
         }
       };
 
@@ -108,7 +121,7 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}) {
         recognitionRef.current.abort();
       }
     };
-  }, [language, continuous, interimResults, maxAlternatives, onResult, onError]);
+  }, [language, continuous, interimResults, maxAlternatives]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || !state.isSupported || isStartingRef.current) {
@@ -124,11 +137,11 @@ export function useVoiceRecognition(options: UseVoiceRecognitionOptions = {}) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to start recognition';
       setState(prev => ({ ...prev, error: errorMessage }));
       
-      if (onError) {
-        onError(errorMessage);
+      if (onErrorRef.current) {
+        onErrorRef.current(errorMessage);
       }
     }
-  }, [state.isSupported, onError]);
+  }, [state.isSupported]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && state.isListening) {

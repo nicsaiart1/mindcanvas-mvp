@@ -8,12 +8,36 @@
   }
   
   body {
-    @apply m-0 min-h-screen bg-canvas-dark text-white;
+    margin: 0;
+    min-height: 100vh;
+    background-color: #1a1a1f;
+    color: white;
     font-family: system-ui, -apple-system, sans-serif;
   }
   
   html, body, #root {
-    @apply h-full overflow-hidden;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Ensure proper viewport handling */
+  html {
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+  
+  body {
+    height: 100vh;
+    height: 100dvh;
+  }
+  
+  #root {
+    height: 100vh;
+    height: 100dvh;
+    width: 100vw;
   }
 }
 
@@ -43,5 +67,32 @@
   .bg-dot-pattern {
     background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
     background-size: 20px 20px;
+  }
+  
+  /* Responsive canvas utilities */
+  .canvas-responsive {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
+  /* Mobile-specific adjustments */
+  @media (max-width: 768px) {
+    .canvas-responsive {
+      /* Handle mobile browsers that don't support dvh */
+      height: 100vh;
+      height: 100dvh;
+    }
+  }
+  
+  /* Prevent zoom issues on touch devices */
+  @media (max-width: 1024px) {
+    .canvas-responsive {
+      touch-action: pan-x pan-y;
+    }
   }
 }

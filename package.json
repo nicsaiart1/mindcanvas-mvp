@@ -20,12 +20,11 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
-    "tailwindcss": "^4.1.11",
+    "tailwindcss": "^3.4.17",
     "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
-    "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "^19.1.10",
     "@types/react-dnd": "^2.0.36",
     "@types/react-dnd-html5-backend": "^3.0.2",

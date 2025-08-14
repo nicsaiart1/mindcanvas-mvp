@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useCanvasStore } from '../../stores/canvasStore';
 import IntentionCard from './IntentionCard';
@@ -6,6 +6,7 @@ import CanvasToolbar from './CanvasToolbar';
 
 export default function Canvas() {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [, setDimensions] = useState({ width: 0, height: 0 });
   const { 
     intentions, 
     createIntention, 
@@ -13,6 +14,21 @@ export default function Canvas() {
     isCreatingIntention,
     activeIntention 
   } = useCanvasStore();
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     // Don't create intention if clicking on an existing card or toolbar
@@ -36,7 +52,7 @@ export default function Canvas() {
   }, [createIntention, canvasState, isCreatingIntention]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="canvas-responsive">
       {/* Canvas Toolbar */}
       <CanvasToolbar />
       
@@ -48,6 +64,10 @@ export default function Canvas() {
         style={{
           transform: `scale(${canvasState.zoom}) translate(${canvasState.panX}px, ${canvasState.panY}px)`,
           transformOrigin: '0 0',
+          width: '100vw',
+          height: '100vh',
+          minWidth: '100%',
+          minHeight: '100%',
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
