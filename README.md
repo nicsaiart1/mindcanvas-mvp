@@ -1,69 +1,132 @@
-# React + TypeScript + Vite
+# MindCanvas MVP 🎯
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**AI-powered canvas workspace where users spawn "Intentions" through voice/touch that generate autonomous AI tasks.**
 
-Currently, two official plugins are available:
+## 🚀 Current Status: Phase 1 Complete
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+✅ **Core Canvas & Voice Input** - Fully implemented and functional!
 
-## Expanding the ESLint configuration
+### Features Implemented
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+#### 🎨 Interactive Canvas
+- **Click-to-create**: Click anywhere on the canvas to spawn a new intention
+- **Infinite canvas**: Zoom and pan controls with smooth animations
+- **Drag & drop**: Move intentions and tasks around the canvas freely
+- **Visual feedback**: Real-time status indicators and smooth transitions
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+#### 🎤 Voice Recognition
+- **Web Speech API**: Native browser voice recognition support
+- **Real-time transcription**: Live voice-to-text with visual feedback
+- **Audio visualization**: Animated microphone and wave indicators
+- **Cross-browser support**: Works in Chrome, Edge, and Safari
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+#### 🎯 Intention Management
+- **Smart status flow**: listening → processing → active → fulfilled
+- **Visual status system**: Color-coded borders and animated icons
+- **Progress tracking**: AI processing progress bars and task counters
+- **Expandable cards**: Clean, minimal interface with expand/collapse
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+#### ⚡ Task Generation Ready
+- **Task cards**: Pre-built components for AI-generated tasks
+- **Hierarchical layout**: Tasks appear connected to parent intentions
+- **Status management**: spawning → executing → completed workflow
+- **Action buttons**: Interactive controls for task progression
+
+#### 🛠 Technical Foundation
+- **TypeScript**: Full type safety with comprehensive interfaces
+- **Zustand**: Lightweight state management for canvas and intentions
+- **Framer Motion**: Smooth animations and gesture handling
+- **Tailwind CSS**: Modern, responsive design system
+
+## 🏃‍♂️ Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/nicsaiart1/mindcanvas-mvp.git
+cd mindcanvas-mvp
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 🔧 Prerequisites
+- **Node.js** 16+ 
+- **Modern browser** with Web Speech API support (Chrome, Edge, Safari)
+- **Microphone access** for voice input functionality
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🎮 How to Use
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Open the app** - You'll see an empty canvas with a gradient background
+2. **Click anywhere** - This creates a new "intention" card
+3. **Speak your intention** - The microphone activates automatically
+4. **Watch the magic** - Your voice is converted to text in real-time
+5. **AI processing** - (Ready for Phase 2 integration)
+
+## 📁 Project Structure
+
 ```
+src/
+├── components/
+│   ├── canvas/
+│   │   ├── Canvas.tsx           # Main canvas component
+│   │   ├── IntentionCard.tsx    # Draggable intention cards
+│   │   ├── TaskCard.tsx         # AI-generated task cards
+│   │   └── CanvasToolbar.tsx    # Zoom controls & stats
+│   └── ui/
+│       └── VoiceInput.tsx       # Voice recognition interface
+├── hooks/
+│   └── useVoiceRecognition.ts   # Web Speech API hook
+├── stores/
+│   └── canvasStore.ts           # Zustand state management
+├── types/
+│   ├── canvas.ts                # Core data models
+│   ├── ai.ts                    # AI-related interfaces
+│   └── global.d.ts              # Web Speech API types
+└── utils/                       # Utility functions (coming soon)
+```
+
+## 🎯 Next Phase: AI Integration
+
+**Coming next** - Phase 2 will add:
+- OpenAI GPT-4 integration for intention analysis
+- Automatic task generation from voice input
+- AI reasoning and progress tracking
+- File upload and content processing
+
+## 🛡 Browser Compatibility
+
+| Feature | Chrome | Edge | Safari | Firefox |
+|---------|--------|------|--------|---------|
+| Canvas | ✅ | ✅ | ✅ | ✅ |
+| Voice Input | ✅ | ✅ | ✅ | ❌ |
+| Animations | ✅ | ✅ | ✅ | ✅ |
+| Drag & Drop | ✅ | ✅ | ✅ | ✅ |
+
+## 📖 Technical Specifications
+
+Built following the comprehensive [MindCanvas MVP Technical Build Instructions](./technical-specs.md) with:
+
+- **React 18+** with TypeScript
+- **Vite** for fast development and building  
+- **Tailwind CSS** for styling
+- **Framer Motion** for animations
+- **Zustand** for state management
+- **Web Speech API** for voice recognition
+
+## 🤝 Contributing
+
+This is an MVP in active development. The next major milestone is AI integration for automatic task generation.
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+**Ready to transform how you capture and execute your intentions!** 🚀
