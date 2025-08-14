@@ -2,9 +2,10 @@
 
 **AI-powered canvas workspace where users spawn "Intentions" through voice/touch that generate autonomous AI tasks.**
 
-## 🚀 Current Status: Phase 1 Complete
+## 🚀 Current Status: Phase 2 Complete
 
 ✅ **Core Canvas & Voice Input** - Fully implemented and functional!
+✅ **AI Integration with OpenAI GPT-4** - Voice-to-AI-to-Tasks workflow complete!
 
 ### Features Implemented
 
@@ -26,11 +27,13 @@
 - **Progress tracking**: AI processing progress bars and task counters
 - **Expandable cards**: Clean, minimal interface with expand/collapse
 
-#### ⚡ Task Generation Ready
-- **Task cards**: Pre-built components for AI-generated tasks
-- **Hierarchical layout**: Tasks appear connected to parent intentions
-- **Status management**: spawning → executing → completed workflow
-- **Action buttons**: Interactive controls for task progression
+#### ⚡ AI-Powered Task Generation
+- **OpenAI GPT-4**: Full integration for intention analysis and task creation
+- **Smart task breakdown**: AI automatically creates 3-5 actionable tasks
+- **Real-time processing**: Visual progress indicators during AI analysis
+- **Error handling**: Graceful fallback and retry mechanisms
+- **Reasoning display**: See why AI suggests each task
+- **Generate more**: Create additional tasks for active intentions
 
 #### 🛠 Technical Foundation
 - **TypeScript**: Full type safety with comprehensive interfaces
@@ -62,11 +65,13 @@ npm run build
 
 ## 🎮 How to Use
 
-1. **Open the app** - You'll see an empty canvas with a gradient background
-2. **Click anywhere** - This creates a new "intention" card
-3. **Speak your intention** - The microphone activates automatically
-4. **Watch the magic** - Your voice is converted to text in real-time
-5. **AI processing** - (Ready for Phase 2 integration)
+1. **Set up your API key** - Copy `env.example` to `.env.local` and add your OpenAI API key
+2. **Open the app** - You'll see an empty canvas with a gradient background
+3. **Click anywhere** - This creates a new "intention" card
+4. **Speak your intention** - The microphone activates automatically
+5. **Watch the magic** - Your voice is converted to text in real-time
+6. **AI processing** - GPT-4 analyzes your intention and creates tasks automatically
+7. **Interactive tasks** - Click to expand, drag to rearrange, mark as complete
 
 ## 📁 Project Structure
 
@@ -91,13 +96,13 @@ src/
 └── utils/                       # Utility functions (coming soon)
 ```
 
-## 🎯 Next Phase: AI Integration
+## 🎯 Next Phase: File Upload & Content Processing
 
-**Coming next** - Phase 2 will add:
-- OpenAI GPT-4 integration for intention analysis
-- Automatic task generation from voice input
-- AI reasoning and progress tracking
-- File upload and content processing
+**Coming next** - Phase 3 will add:
+- File upload with drag & drop (PDF, images, documents)
+- Automatic text extraction from uploaded files
+- AI analysis of file content for context
+- Enhanced task generation using file insights
 
 ## 🛡 Browser Compatibility
 
