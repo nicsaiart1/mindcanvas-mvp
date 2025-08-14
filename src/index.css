@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply m-0 min-h-screen bg-canvas-dark text-white;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  
+  html, body, #root {
+    @apply h-full overflow-hidden;
+  }
+}
+
+@layer components {
+  .canvas-card {
+    @apply bg-gray-900/90 backdrop-blur-sm border-2 rounded-2xl p-4 shadow-2xl;
+  }
+  
+  .canvas-button {
+    @apply px-3 py-1 rounded text-xs font-medium transition-colors;
+  }
+  
+  .canvas-button-primary {
+    @apply canvas-button bg-blue-600 hover:bg-blue-700 text-white;
+  }
+  
+  .canvas-button-secondary {
+    @apply canvas-button bg-gray-600 hover:bg-gray-700 text-white;
+  }
+  
+  .canvas-button-success {
+    @apply canvas-button bg-green-600 hover:bg-green-700 text-white;
+  }
+}
+
+@layer utilities {
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
