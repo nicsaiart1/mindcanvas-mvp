@@ -6,6 +6,7 @@ import { useVoiceRecognition } from '../../hooks/useVoiceRecognition';
 import { useAI } from '../../hooks/useAI';
 import VoiceInput from '../ui/VoiceInput';
 import TaskCard from './TaskCard';
+import LiveOutputCollation from './LiveOutputCollation';
 
 interface Props {
   intention: Intention;
@@ -15,8 +16,12 @@ interface Props {
 export default function IntentionCard({ intention, isActive }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
-  const { updateIntention, setActiveIntention } = useCanvasStore();
+  const { updateIntention, setActiveIntention, selectElement, isElementSelected } = useCanvasStore();
   const { processIntention, processingState, isAIAvailable, generateMoreTasks } = useAI();
+
+  const handleUpdateCollatedOutput = useCallback((output: string) => {
+    updateIntention(intention.id, { collatedOutput: output });
+  }, [intention.id, updateIntention]);
 
   // Memoize the onResult callback to prevent recreation on every render
   const handleVoiceResult = useCallback((finalTranscript: string, isFinal: boolean) => {
@@ -80,13 +85,20 @@ export default function IntentionCard({ intention, isActive }: Props) {
   };
 
   const getStatusColor = () => {
-    switch (intention.status) {
-      case 'listening': return 'border-blue-400 shadow-blue-400/20';
-      case 'processing': return 'border-yellow-400 shadow-yellow-400/20';
-      case 'active': return 'border-green-400 shadow-green-400/20';
-      case 'fulfilled': return 'border-purple-400 shadow-purple-400/20';
-      default: return 'border-gray-400 shadow-gray-400/20';
-    }
+    // Add selection highlight
+    const baseColor = (() => {
+      switch (intention.status) {
+        case 'listening': return 'border-blue-400 shadow-blue-400/20';
+        case 'processing': return 'border-yellow-400 shadow-yellow-400/20';
+        case 'active': return 'border-green-400 shadow-green-400/20';
+        case 'fulfilled': return 'border-purple-400 shadow-purple-400/20';
+        default: return 'border-gray-400 shadow-gray-400/20';
+      }
+    })();
+    
+    return isSelected 
+      ? `${baseColor} ring-2 ring-white/50 ring-offset-2 ring-offset-transparent` 
+      : baseColor;
   };
 
   const getStatusText = () => {
@@ -117,11 +129,20 @@ export default function IntentionCard({ intention, isActive }: Props) {
     updateIntention(intention.id, { status: 'fulfilled' });
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isMultiSelect = e.ctrlKey || e.metaKey;
+    selectElement('intention', intention.id, isMultiSelect);
+  };
+
+  const isSelected = isElementSelected('intention', intention.id);
+
   return (
     <>
       <motion.div
         data-canvas-item
-        className={`absolute canvas-card border-2 ${getStatusColor()} min-w-[400px] max-w-[500px] shadow-2xl`}
+        className={`absolute canvas-card border-2 ${getStatusColor()} min-w-[400px] max-w-[500px] shadow-2xl cursor-pointer select-none`}
+        onClick={handleClick}
         style={{
           left: intention.position.x,
           top: intention.position.y,
@@ -320,6 +341,23 @@ export default function IntentionCard({ intention, isActive }: Props) {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Live Output Collation */}
+      {isExpanded && intention.tasks.length > 0 && (
+        <motion.div
+          className="absolute top-full left-0 mt-4 w-full"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ delay: 0.2 }}
+        >
+          <LiveOutputCollation
+            tasks={intention.tasks}
+            collatedOutput={intention.collatedOutput}
+            onUpdateCollatedOutput={handleUpdateCollatedOutput}
+          />
+        </motion.div>
+      )}
 
       {/* Task Cards */}
       {showTasks && intention.tasks.map((task, index) => (

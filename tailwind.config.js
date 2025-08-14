@@ -25,7 +25,10 @@ export default {
       },
       backdropBlur: {
         'xs': '2px',
-      }
+      },
+      backgroundColor: {
+        'gray-900-90': 'rgba(17, 24, 39, 0.9)',
+      },
     },
   },
   plugins: [],

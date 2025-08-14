@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AIService } from '../services/aiService';
 import { useCanvasStore } from '../stores/canvasStore';
-import type { AIProcessingState, AIConfiguration } from '../types/ai';
+import type { AIProcessingState, AIConfiguration, AIResourceUsage, AITaskExecution } from '../types/ai';
+import type { TaskOutput } from '../types/canvas';
 
 // Default AI configuration
 const DEFAULT_AI_CONFIG: Partial<AIConfiguration> = {
@@ -19,15 +20,29 @@ export function useAI() {
   });
   
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [resourceUsage, setResourceUsage] = useState<AIResourceUsage>({
+    currentRequests: 0,
+    totalRequests: 0,
+    requestsPerMinute: 0,
+    tokensUsed: 0,
+    estimatedCost: 0,
+    rateLimitReached: false,
+  });
+  
   const aiServiceRef = useRef<AIService | null>(null);
   
   const { updateIntention, addTask, updateTask } = useCanvasStore();
 
   // Initialize AI service when API key is available
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const getApiKey = () => {
+      return import.meta.env.VITE_OPENAI_API_KEY || 
+             (typeof window !== 'undefined' ? localStorage.getItem('mindcanvas_openai_api_key') : null);
+    };
     
-    if (apiKey) {
+    const apiKey = getApiKey();
+    
+    if (apiKey && apiKey !== 'your_openai_api_key_here') {
       const config: AIConfiguration = {
         ...DEFAULT_AI_CONFIG,
         apiKey,
@@ -37,6 +52,15 @@ export function useAI() {
       
       // Test connection
       aiServiceRef.current.testConnection().then(setIsConnected);
+      
+      // Start resource monitoring
+      const interval = setInterval(() => {
+        if (aiServiceRef.current) {
+          setResourceUsage(aiServiceRef.current.getResourceUsage());
+        }
+      }, 2000);
+      
+      return () => clearInterval(interval);
     } else {
       console.warn('OpenAI API key not found. AI features will be disabled.');
       setIsConnected(false);
@@ -106,6 +130,9 @@ export function useAI() {
             position: { x: 50, y: i * 120 }, // Offset tasks vertically
             aiReasoning: taskData.reasoning,
             relatedAttachments: [],
+            progress: 0,
+            currentStep: 'Ready to execute',
+            outputs: [],
           });
         }, i * 800); // Stagger task creation for visual effect
       }
@@ -211,6 +238,9 @@ export function useAI() {
             },
             aiReasoning: taskData.reasoning,
             relatedAttachments: [],
+            progress: 0,
+            currentStep: 'Ready to execute',
+            outputs: [],
           });
         }, index * 500);
       });
@@ -218,6 +248,81 @@ export function useAI() {
       console.error('AI task generation failed:', error);
     }
   }, [addTask]);
+
+  // Execute a task with real-time progress tracking
+  const executeTask = useCallback(async (taskId: string) => {
+    if (!aiServiceRef.current) {
+      console.error('AI service not initialized');
+      return;
+    }
+
+    const intention = useCanvasStore.getState().intentions.find(i => 
+      i.tasks.some(t => t.id === taskId)
+    );
+    
+    const task = intention?.tasks.find(t => t.id === taskId);
+    
+    if (!task) {
+      console.error('Task not found');
+      return;
+    }
+
+    // Update task to executing status
+    updateTask(taskId, { 
+      status: 'executing',
+      executionStarted: new Date(),
+      currentStep: 'Starting execution...'
+    });
+
+    try {
+      await aiServiceRef.current.executeTask(task, (execution: AITaskExecution) => {
+        // Update task with real-time progress
+        const taskOutputs: TaskOutput[] = execution.outputs.map(output => ({
+          id: crypto.randomUUID(),
+          timestamp: output.timestamp,
+          type: output.type,
+          content: output.content,
+        }));
+
+        updateTask(taskId, {
+          progress: execution.progress,
+          currentStep: execution.currentStep,
+          outputs: taskOutputs,
+          status: execution.status === 'completed' ? 'completed' : 'executing',
+          executionCompleted: execution.status === 'completed' ? new Date() : undefined,
+        });
+
+        // Update intention's collated output if task is completed
+        if (execution.status === 'completed' && intention) {
+          const resultOutputs = taskOutputs.filter(output => output.type === 'result');
+          if (resultOutputs.length > 0) {
+            const currentCollatedOutput = intention.collatedOutput || '';
+            const newOutput = resultOutputs.map(output => 
+              `**${task.title}**: ${output.content}`
+            ).join('\n\n');
+            
+            updateIntention(intention.id, {
+              collatedOutput: currentCollatedOutput 
+                ? `${currentCollatedOutput}\n\n${newOutput}`
+                : newOutput
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Task execution failed:', error);
+      updateTask(taskId, {
+        status: 'spawning', // Revert back to spawning on failure
+        currentStep: 'Execution failed',
+        outputs: [...task.outputs, {
+          id: crypto.randomUUID(),
+          timestamp: new Date(),
+          type: 'error',
+          content: error instanceof Error ? error.message : 'Task execution failed'
+        }]
+      });
+    }
+  }, [updateTask, updateIntention]);
 
   // Clear any processing errors
   const clearError = useCallback(() => {
@@ -234,12 +339,14 @@ export function useAI() {
     // State
     processingState,
     isConnected,
+    resourceUsage,
     isAIAvailable: !!aiServiceRef.current && isConnected === true,
     
     // Actions
     processIntention,
     updateTaskWithAI,
     generateMoreTasks,
+    executeTask,
     clearError,
     retryProcessing,
     

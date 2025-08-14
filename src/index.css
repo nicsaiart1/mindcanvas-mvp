@@ -61,6 +61,28 @@
   .canvas-button-success {
     @apply canvas-button bg-green-600 hover:bg-green-700 text-white;
   }
+  
+  /* Custom slider styling for settings modal */
+  .slider::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 bg-blue-500 rounded-full cursor-pointer;
+    border: 2px solid #1e293b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .slider::-webkit-slider-thumb:hover {
+    @apply bg-blue-400;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  }
+  
+  .slider::-moz-range-thumb {
+    @apply w-4 h-4 bg-blue-500 rounded-full cursor-pointer border-0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .slider::-moz-range-thumb:hover {
+    @apply bg-blue-400;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  }
 }
 
 @layer utilities {

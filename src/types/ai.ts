@@ -34,3 +34,43 @@ export interface VoiceRecognitionState {
   isSupported: boolean;
   error?: string;
 }
+
+export interface AIResourceUsage {
+  currentRequests: number;
+  totalRequests: number;
+  requestsPerMinute: number;
+  tokensUsed: number;
+  estimatedCost: number;
+  rateLimitReached: boolean;
+  resetTime?: Date;
+}
+
+export interface AITaskExecution {
+  taskId: string;
+  status: 'starting' | 'running' | 'completed' | 'failed';
+  progress: number;
+  currentStep: string;
+  outputs: TaskExecutionOutput[];
+  startTime: Date;
+  endTime?: Date;
+}
+
+export interface TaskExecutionOutput {
+  timestamp: Date;
+  type: 'progress' | 'result' | 'error';
+  content: string;
+}
+
+export interface AITaskExecution {
+  taskId: string;
+  status: 'starting' | 'running' | 'completed' | 'failed';
+  progress: number;
+  currentStep: string;
+  outputs: Array<{
+    timestamp: Date;
+    type: 'progress' | 'result' | 'error';
+    content: string;
+  }>;
+  startTime: Date;
+  endTime?: Date;
+}

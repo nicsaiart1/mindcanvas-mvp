@@ -16,6 +16,7 @@ export interface Intention {
   attachments: Attachment[];
   userContext: string[];
   aiProgress: number; // 0-100
+  collatedOutput: string; // live aggregated output from all tasks
 }
 
 export interface Task {
@@ -28,6 +29,11 @@ export interface Task {
   createdAt: Date;
   aiReasoning: string;
   relatedAttachments: string[]; // attachment IDs
+  progress: number; // 0-100
+  currentStep: string; // current step description
+  outputs: TaskOutput[]; // real-time outputs
+  executionStarted?: Date;
+  executionCompleted?: Date;
 }
 
 export interface Attachment {
@@ -59,6 +65,14 @@ export interface DragItem {
   id: string;
   type: 'intention' | 'task';
   position: Position;
+}
+
+export interface TaskOutput {
+  id: string;
+  timestamp: Date;
+  type: 'progress' | 'result' | 'error';
+  content: string;
+  metadata?: Record<string, any>;
 }
 
 export type IntentionStatus = Intention['status'];

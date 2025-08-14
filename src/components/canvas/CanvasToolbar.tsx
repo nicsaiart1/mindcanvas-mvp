@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useCanvasStore } from '../../stores/canvasStore';
 import { useAI } from '../../hooks/useAI';
+import SettingsModal from '../ui/SettingsModal';
 
 export default function CanvasToolbar() {
   const { 
@@ -11,6 +13,7 @@ export default function CanvasToolbar() {
   } = useCanvasStore();
   
   const { isAIAvailable, processingState } = useAI();
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleZoomIn = () => {
     updateCanvasState({ zoom: Math.min(canvasState.zoom * 1.2, 3) });
@@ -31,7 +34,7 @@ export default function CanvasToolbar() {
   return (
     <motion.div
       data-toolbar
-      className="absolute top-4 left-4 z-10 bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-2xl"
+      className="absolute top-4 left-4 z-10 bg-gray-900-90 backdrop-blur-sm border border-gray-700 rounded-xl p-3 shadow-2xl"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.2 }}
@@ -112,6 +115,14 @@ export default function CanvasToolbar() {
             🗑️
           </button>
         )}
+        
+        <button
+          onClick={() => setShowSettings(true)}
+          className="canvas-button-secondary ml-2"
+          title="Settings"
+        >
+          ⚙️
+        </button>
       </div>
 
       {/* Instructions */}
@@ -122,6 +133,12 @@ export default function CanvasToolbar() {
           </p>
         </div>
       )}
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </motion.div>
   );
 }

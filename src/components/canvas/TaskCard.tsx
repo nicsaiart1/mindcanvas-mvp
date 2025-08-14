@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { Task, Position } from '../../types/canvas';
 import { useCanvasStore } from '../../stores/canvasStore';
+import { useAI } from '../../hooks/useAI';
 
 interface Props {
   task: Task;
@@ -8,7 +9,8 @@ interface Props {
 }
 
 export default function TaskCard({ task, parentPosition }: Props) {
-  const { updateTask } = useCanvasStore();
+  const { updateTask, selectElement, isElementSelected } = useCanvasStore();
+  const { executeTask, isAIAvailable } = useAI();
 
   const getStatusIcon = () => {
     switch (task.status) {
@@ -20,12 +22,18 @@ export default function TaskCard({ task, parentPosition }: Props) {
   };
 
   const getStatusColor = () => {
-    switch (task.status) {
-      case 'spawning': return 'border-yellow-300 shadow-yellow-300/20';
-      case 'executing': return 'border-orange-400 shadow-orange-400/20';
-      case 'completed': return 'border-green-400 shadow-green-400/20';
-      default: return 'border-gray-400 shadow-gray-400/20';
-    }
+    const baseColor = (() => {
+      switch (task.status) {
+        case 'spawning': return 'border-yellow-300 shadow-yellow-300/20';
+        case 'executing': return 'border-orange-400 shadow-orange-400/20';
+        case 'completed': return 'border-green-400 shadow-green-400/20';
+        default: return 'border-gray-400 shadow-gray-400/20';
+      }
+    })();
+    
+    return isSelected 
+      ? `${baseColor} ring-2 ring-white/50 ring-offset-2 ring-offset-transparent` 
+      : baseColor;
   };
 
   const handleComplete = () => {
@@ -33,13 +41,26 @@ export default function TaskCard({ task, parentPosition }: Props) {
   };
 
   const handleExecute = () => {
-    updateTask(task.id, { status: 'executing' });
+    if (isAIAvailable) {
+      executeTask(task.id);
+    } else {
+      updateTask(task.id, { status: 'executing' });
+    }
   };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isMultiSelect = e.ctrlKey || e.metaKey;
+    selectElement('task', task.id, isMultiSelect);
+  };
+
+  const isSelected = isElementSelected('task', task.id);
 
   return (
     <motion.div
       data-canvas-item
-      className={`absolute canvas-card border-2 ${getStatusColor()} min-w-[350px] max-w-[400px] shadow-xl`}
+      className={`absolute canvas-card border-2 ${getStatusColor()} min-w-[350px] max-w-[400px] shadow-xl cursor-pointer select-none`}
+      onClick={handleClick}
       style={{
         left: parentPosition.x,
         top: parentPosition.y,
@@ -128,6 +149,40 @@ export default function TaskCard({ task, parentPosition }: Props) {
           </p>
         </div>
 
+        {/* Progress Bar */}
+        {task.status === 'executing' && (
+          <div className="mb-3">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-gray-400">Progress:</span>
+              <span className="text-gray-300">{Math.round(task.progress || 0)}%</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-1.5">
+              <motion.div
+                className="h-1.5 bg-blue-500 rounded-full"
+                style={{ width: `${task.progress || 0}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${task.progress || 0}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            {task.currentStep && (
+              <p className="text-xs text-blue-400 mt-1 italic">
+                {task.currentStep}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Recent Output */}
+        {task.outputs.length > 0 && task.status === 'executing' && (
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 mb-1">Latest Output:</p>
+            <div className="bg-gray-800/50 p-2 rounded text-xs text-gray-300 max-h-16 overflow-y-auto">
+              {task.outputs[task.outputs.length - 1].content}
+            </div>
+          </div>
+        )}
+
         {/* AI Reasoning */}
         {task.aiReasoning && (
           <div>
@@ -144,24 +199,47 @@ export default function TaskCard({ task, parentPosition }: Props) {
             <button
               onClick={handleExecute}
               className="canvas-button-primary"
+              title={isAIAvailable ? "Execute with AI" : "Mark as executing"}
             >
-              ▶️ Start Task
+              {isAIAvailable ? '🤖 AI Execute' : '▶️ Start Task'}
             </button>
           )}
           
           {task.status === 'executing' && (
-            <button
-              onClick={handleComplete}
-              className="canvas-button-success"
-            >
-              ✓ Complete
-            </button>
+            <>
+              <div className="flex items-center gap-1 text-xs text-blue-400">
+                <motion.div
+                  className="w-2 h-2 bg-blue-400 rounded-full"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                />
+                <span>Executing...</span>
+              </div>
+              <button
+                onClick={handleComplete}
+                className="canvas-button-success text-xs"
+              >
+                ✓ Force Complete
+              </button>
+            </>
           )}
           
           {task.status === 'completed' && (
-            <div className="flex items-center gap-1 text-xs text-green-400">
-              <span>✅</span>
-              <span>Task completed</span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1 text-xs text-green-400">
+                <span>✅</span>
+                <span>Task completed</span>
+              </div>
+              {task.executionCompleted && (
+                <div className="text-xs text-gray-500">
+                  Completed {task.executionCompleted.toLocaleTimeString()}
+                </div>
+              )}
+              {task.outputs.filter(o => o.type === 'result').length > 0 && (
+                <div className="text-xs text-green-300">
+                  {task.outputs.filter(o => o.type === 'result').length} result(s) generated
+                </div>
+              )}
             </div>
           )}
         </div>
